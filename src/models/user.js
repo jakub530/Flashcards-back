@@ -21,15 +21,6 @@ const userSchema = new mongoose.Schema({
       }
     }
   },
-  age: {
-    type: Number,
-    default: 0,
-    validate(value) {
-      if(value < 0) {
-        throw new Error('Age must be a positive number')
-      }
-    }
-  },
   password: {
     type: String,
     required: true,
@@ -53,11 +44,11 @@ const userSchema = new mongoose.Schema({
     timestamps: true,
 })
 
-// userSchema.virtual('tasks', {
-//     ref: 'Task',
-//     localField: '_id',
-//     foreignField: 'owner'
-// })
+userSchema.virtual('sets', {
+    ref: 'Set',
+    localField: '_id',
+    foreignField: 'owner'
+})
 
 // Check if user exists, and has given correct password
 userSchema.statics.findByCredentials = async (email, password) => {
@@ -97,7 +88,7 @@ userSchema.methods.generateAuthToken = async function () {
 // Hash the plain text password before sending
 userSchema.pre('save', async function (next) {
   const user = this // Syntax only
-  
+
   if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, 8)
   }
