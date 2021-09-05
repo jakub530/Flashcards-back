@@ -1,4 +1,7 @@
 const mongoose = require('mongoose')
+const Set = require('./set')
+const Card = require('./card')
+const log = require('../log')
 
 const sessionSchema = new mongoose.Schema({
   name: {
@@ -16,8 +19,26 @@ const sessionSchema = new mongoose.Schema({
     required: true,
     ref: 'User'
   },
-  settings: {
-    type: Map
+  state: {
+    currentItem: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref:'sessionItem',      
+    },
+    currentBucket: {
+      Number
+    },
+    currentCount: {
+      Number
+    },
+    itemFlag: {
+      type: String,
+      enum: ['public','private'],
+      default: 'private'  
+    },
+    bucketCount: [
+      Number  
+    ]
   },
   next_item: {
     type: Map
@@ -32,11 +53,28 @@ const sessionSchema = new mongoose.Schema({
     timestamps: true,
 })
 
-userSchema.virtual('sessionItems', {
+sessionSchema.virtual('sessionItems', {
   ref: 'SessionItem',
   localField: '_id',
   foreignField: 'session'
 })
+
+sessionSchema.statics.initializeSessionItems = async function(setIds) {
+  const session = this;
+  const cards = await Card.find({
+    'set': { $in: setIds}
+  })
+
+  // TO DO: Need to create a session item for each of the cards here
+
+  return 
+}
+
+sessionSchema.method.initializeSessionState = async function()
+{
+  const session = this;
+  // TO DO: Need to initalize session state in here
+}
 
 const Session = mongoose.model('Session', sessionSchema)
 

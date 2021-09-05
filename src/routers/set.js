@@ -9,109 +9,84 @@ const {filterUpdates, updateCards} = require('../utility/routers')
 
 // Create new set
 router.post('/sets', auth, async (req, res) => {
-  const {cards, settings, name, description, access} =  req.body
+  const {cards, set} =  req.body
   const userId = req.user._id
 
-  log.silly("Cards:",cards)
-  log.silly("Settings",settings)
-  log.silly("Name",name)
-  log.silly("Description",description)
-  log.silly("Access",access)
-
   try {
-    const set = new Set({name, description, owner:userId, settings, access})
-    await set.save()
-    log.silly("Saved Set:",set)
+    set.owner = userId;
+    const newSet = new Set(set)
+    await newSet.save()
     
-    const insrtedCards = await set.insertCards(cards)
+    const insertedCards = await newSet.insertCards(cards)
 
-    log.silly("Inserted Cards", insrtedCards)
-    res.status(200).send();
+    res.status(201).send({set:newSet, cards:insertedCards});
   } catch(e) {
     res.status(400).send(e);
   }
 })
 
 // Copy set to your new set
-// Needs to check if document exists, then has to check 
-// if it is public and probably? if it belongs to another user
-// Given all of those you can copy it and then subsequently copy all 
-// of the cards
-router.post('/sets/copy', auth, async (req, res) => {
-  const {id} = req.body
+router.post('/sets/copy/:id', auth, async (req, res) => {
+  const _id = req.params.id
 
-  const set = await Set.findById(id);
-  log.silly("Owner", set.owner._id)
-  log.silly("User",  req.user._id)
 
-  if(!set)
-  {
-    log.silly("Not found a set with this ID")
-  } else if(set.access ==="private")
-  {
-    log.silly("Can't copy private set")
-  }
-  else if(set.owner._id.equals(req.user._id))
-  {
-    log.silly("Can't copy your own document")
-  }
-  else
-  {
-    set.owner = req.user._id;
-    set._id = mongoose.Types.ObjectId();
-    set.isNew = true;
-    set.access = "private";
+  try {
+    const setToCopy = await Set.findById(_id);
+    if(!setToCopy)
+    {
+      return res.status(400).send("Unable to find the set with given id")    
+    }
+    if(setToCopy.access ==="private" || setToCopy.owner._id.equals(req.user._id))
+    {
+      return res.status(400).send("Unable to copy this set")
+    }
+    const cardsToCopy = await setToCopy.findSetCards()
 
-    const new_set = await set.save()
-    log.silly("New Set", new_set)
+    const newSet = setToCopy
+    newSet.owner = req.user._id;
+    newSet._id = mongoose.Types.ObjectId();
+    newSet.isNew = true;
+    newSet.access = "private";
 
-    const cards = await Card.find({ set: id});
-    cards.forEach((elem) => {
-      elem.set = new_set._id;
+    const createdSet = await newSet.save()
+
+    cardsToCopy.forEach((elem) => {
+      elem.set = createdSet._id;
       elem._id = mongoose.Types.ObjectId();
       elem.isNew = true;
     })
+    const insertedCards = await createdSet.insertCards(cardsToCopy)
 
-    const insertedCards = await Card.insertMany(cards)
-  }
-
-  try {
-    res.status(200).send();
+  
+    res.status(200).send({set:createdSet, cards:insertedCards});
   } catch(e) {
     res.status(400).send(e);
   }
-
-
 })
 
 // Get all sets (public or not can be controlled by flag)
 router.get('/sets', auth, async (req, res) => {
   const access = req.body.access
   let sets
-  if(!access)
-  {
-    log.silly("Access", "No access flag")
-    sets = await Set.find({owner:req.user._id})
-
-  } else if(access==="public")
-  {
-    log.silly("Access", "Only public access")
-    sets = await Set.find({access:"public", owner:{$ne:req.user._id}})
-
-  } else if(access==="all")
-  {
-    log.silly("Access", "All access")
-    sets = await Set.find({
-      $or: [
-        {access:"public"}, 
-        {owner:{$ne:req.user._id}}
-      ]
-    })
-  }
-
-  log.silly("Sets", sets)
 
   try {
+    switch(access) {
+      case "public":
+        sets = await Set.find({access:"public", owner:{$ne:req.user._id}})
+        break;
+      case "all":
+        sets = await Set.find({
+          $or: [
+            {access:"public"}, 
+            {owner:{$ne:req.user._id}}
+          ]
+        })
+        break;
+      default:
+        sets = await Set.find({owner:req.user._id})
+        break;
+    }
+
     res.status(200).send(sets);
   } catch(e) {
     res.status(400).send(e);
@@ -127,7 +102,7 @@ router.get('/sets/:id', auth, async (req, res) => {
       const cards = await set.findSetCards();
 
       if (!set) {
-          return res.status(404).send()
+          return res.status(404).send("Unable to find set")
       }
       res.send({set,cards})
   } catch (e) {

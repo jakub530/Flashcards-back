@@ -52,6 +52,12 @@ setSchema.methods.findSetCards = async function () {
 
 setSchema.methods.insertCards = async function(cards) {
   const set = this
+  
+  if(!cards)
+  {
+    return null;
+  }
+
   cards.forEach((elem) => {
     elem.set = set._id;
   })
