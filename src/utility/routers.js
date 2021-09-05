@@ -10,10 +10,10 @@ const filterUpdates = (updates, allowedUpdates) => {
   })
   log.silly("Valid:", isValidOperation)
   if (!isValidOperation) {
-    return null
+    return "invalid"
   }
 
-  return updates
+  return updateKeys
 }
 
 // 1. Get list of all cards currently 
@@ -30,17 +30,18 @@ const updateCards = async (updates, set) => {
 
   
 
-  log.silly("newCards", newCards)
-  log.silly("existingCards", cardsToUpdate)
-  log.silly("existingIds", IdsToUpdate)
-  log.silly("currentCards", currentCards)
-  log.silly("currentCardsIds", currentCardsIds)
-  log.silly("cardsToDelete", cardsToDelete)
+  // log.silly("newCards", newCards)
+  // log.silly("existingCards", cardsToUpdate)
+  // log.silly("existingIds", IdsToUpdate)
+  // log.silly("currentCards", currentCards)
+  // log.silly("currentCardsIds", currentCardsIds)
+  // log.silly("cardsToDelete", cardsToDelete)
 
-  log.silly("insertedCards", insertedCards)
-  log.silly("deletedCards", deletedCards)
-  log.silly("updatedCards", updatedCards)
+  // console.log("insertedCards", insertedCards)
+  // console.log("deletedCards", deletedCards)
+  // console.log("updatedCards", updatedCards)
 
+  return({insertedCards, deletedCards, updatedCards})
 }
 
 module.exports = {

@@ -12,9 +12,8 @@ const sessionItemSchema = new mongoose.Schema({
     default: "",
   },
   bucket: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Number,
     required: true,
-    ref: 'User'
   },
   history: [{
     date: {
@@ -30,6 +29,18 @@ const sessionItemSchema = new mongoose.Schema({
 }, {
     timestamps: true,
 })
+
+sessionItemSchema.statics.initialize = async (sessionId, cardId) => {
+  const newSessionItem = await new SessionItem({
+    session:sessionId,
+    card:cardId,
+    bucket:1,
+    history:[],
+  }).save()
+
+  return newSessionItem
+}
+
 
 const SessionItem = mongoose.model('SessionItem', sessionItemSchema)
 

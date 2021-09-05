@@ -1,6 +1,7 @@
 const request = require('supertest')
 const app = require('../src/app')
 const User = require('../src/models/user')
+const Set = require('../src/models/set')
 const { Users, newSets, Sets, newCards, Cards, setupDatabase} = require('./fixtures/db')
 const log = require('../src/log')
 
@@ -46,15 +47,13 @@ test('Should save set without cards succesfully', async () => {
   const set = response.body.set
   const cards = response.body.cards
 
-  // Check if the set has been created correctly
-  expect(set).toMatchObject(
-    newSet
-  )
+  // Checks if the set has been created correctly
+  expect(set).toMatchObject(newSet)
 
-  // WIthout any cards we expect cards to be null
+  // Without any cards we expect cards to be null
   expect(cards).toBeNull()
 
-  //  Check if it has correct owner 
+  //  Checks if it has correct owner 
   expect(set.owner).toBe(fixUser._id.toString())
 })
 
@@ -159,7 +158,7 @@ test('Should get both own and public test', async () => {
   expect(response.body.length).toBe(3)
 })
 
-test('Should get single set and its cards', async () => {
+test('Should get single private set and its cards', async () => {
   const fixUser = Users[0];
   const setID = Sets[0]._id;
 
@@ -169,8 +168,119 @@ test('Should get single set and its cards', async () => {
     .send({access:"all"})
     .expect(200)
 
-  console.log(response.body)
+  expect(response.body.set._id).toBe(setID._id.toString())
+})
+
+test('Should get single public set and its cards', async () => {
+  const fixUser = Users[0];
+  const setID = Sets[3]._id;
+
+  const response = await request(app)
+    .get(`/sets/${setID}`)
+    .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+    .send({access:"all"})
+    .expect(200)
+
+  expect(response.body.set._id).toBe(setID._id.toString())
+})
+
+test('Should fail to get private set of another user', async () => {
+  const fixUser = Users[0];
+  const setID = Sets[2]._id;
+
+  const response = await request(app)
+    .get(`/sets/${setID}`)
+    .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+    .send({access:"all"})
+    .expect(404)
+
+    expect(response.error.text).toBe("Unable to find the set with given id")
 })
 
 
 
+test('Should update all cards', async () => {
+  const fixUser = Users[0];
+  const setID = Sets[0]._id;
+  const fixCards = [Cards[0],Cards[1], Cards[2], Cards[3]]
+
+  const response = await request(app)
+    .patch(`/sets/${setID}`)
+    .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+    .send({cards:fixCards})
+    .expect(200)
+
+    const {insertedCards, deletedCards, updatedCards} = response.body.cards
+    expect(insertedCards.length).toBe(0)
+    expect(deletedCards.deletedCount).toBe(0)
+    expect(updatedCards.length).toBe(4)
+})
+
+test('Should delete all cards', async () => {
+  const fixUser = Users[0];
+  const setID = Sets[0]._id;
+  const fixCards = null
+
+  const response = await request(app)
+    .patch(`/sets/${setID}`)
+    .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+    .send({cards:fixCards})
+    .expect(200)
+
+    const {insertedCards, deletedCards, updatedCards} = response.body.cards
+    expect(insertedCards.length).toBe(0)
+    expect(deletedCards.deletedCount).toBe(4)
+    expect(updatedCards.length).toBe(0)
+})
+
+test('Should delete/update/insert cards', async () => {
+  const fixUser = Users[0];
+  const setID = Sets[0]._id;
+
+  const fixCards = [Cards[0],newCards[0],newCards[1]]
+
+  const response = await request(app)
+    .patch(`/sets/${setID}`)
+    .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+    .send({cards:fixCards})
+    .expect(200)
+
+    const {insertedCards, deletedCards, updatedCards} = response.body.cards
+    
+    expect(insertedCards.length).toBe(2)
+    expect(deletedCards.deletedCount).toBe(3)
+    expect(updatedCards.length).toBe(1)
+})
+
+test('Should update set itself', async () => {
+  const fixUser = Users[0];
+  const setID = Sets[0]._id;
+
+  const response = await request(app)
+    .patch(`/sets/${setID}`)
+    .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+    .send({set:{name:"New Name",description:"Test description"}})
+    .expect(200)
+    
+    const set = response.body.set
+    expect(set.name).toBe("New Name")
+    expect(set.description).toBe("Test description")
+    
+})
+
+test('Should delete a set and its cards', async () => {
+  const fixUser = Users[0];
+  const setID = Sets[0]._id;
+
+  const response = await request(app)
+    .delete(`/sets/${setID}`)
+    .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+    .expect(200)
+
+  const set = await Set.findOne({ _id:setID});
+  expect(response.body.cards.deletedCount).toBe(4)
+  expect(set).toBeNull()
+    
+})
+ 
+ 

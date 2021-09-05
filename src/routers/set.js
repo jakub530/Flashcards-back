@@ -98,67 +98,51 @@ router.get('/sets/:id', auth, async (req, res) => {
   const _id = req.params.id
 
   try {
-      const set = await Set.findOne({ _id, owner: req.user._id })
-      const cards = await set.findSetCards();
+    const set = await Set.findOne({
+      $or: [
+        {access:"public", _id}, 
+        {owner:req.user._id, _id}
+      ]
+    })
 
-      if (!set) {
-          return res.status(404).send("Unable to find set")
-      }
-      res.send({set,cards})
+    if (!set) {
+      return res.status(404).send("Unable to find the set with given id")
+    }
+    const cards = await set.findSetCards();
+
+    res.send({set,cards})
   } catch (e) {
-      console.log(e)
-      return res.status(500).send()
+    return res.status(500).send(e)
   }
 })
 
-// Modify existing set
-// Needs to do 3 things 
-// First of all it needs to find all the cards of a given set
-// Then it needs to separate incoming cards into two categories with id and without it
-// Those with ids will need to be updated (probably in the loop)
-// Those without ids will need to be added
-// Finally those, which haven't been provided will be deleted 
 
+// Update the set and the cards included in the set
 router.patch('/sets/:id', auth, async (req, res) => {
   const _id = req.params.id
-  allowedUpdates = ["name", "description"]
-  const updates = filterUpdates(req.body.set, ["name", "description"])
-  log.silly("Updates:",updates)
-  if(!updates)
-  {
-    return res.status(400).send({error:'Invalid updates!'})
-  }
-  
-  const set = await Set.findOne({ _id, owner: req.user._id })
-  const test = updateCards(req.body.cards,set)
-
-  // try {
-    // Update set first
-    // const set = await Set.findOne({ _id, owner: req.user._id })
-// 
-    // const allowedUpdates = ['name', 'description', 'access', 'settings']
-// 
-    // const isValidOperation = updates.every((update) => {
-      // return allowedUpdates.includes(update)
-    // })
-// 
-    // if (!isValidOperation) {
-      // return res.status(400).send({error:'Invalid updates!'})
-    // }
-// 
-    // const cards = await set.findSetCards();
-// 
-    // if (!set) {
-        // return res.status(404).send()
-    // }
-    // res.send({set,cards})
-  // } catch (e) {
-      // console.log(e)
-      // return res.status(500).send()
-  // }
 
   try {
-    res.status(200).send();
+    const set = await Set.findOne({ _id, owner: req.user._id })
+    if(req.body.set)
+    {
+      allowedUpdates = ["name", "description"]
+      const updates = filterUpdates(req.body.set, ["name", "description"])
+      if(updates=="invalid")
+      {
+        return res.status(400).send({error:'Invalid updates!'})
+      }
+
+      if(updates)
+      {
+        updates.forEach((update) => set[update] = req.body.set[update])
+        await set.save()
+      }
+
+    }
+
+    
+    const cardUpdates = await updateCards(req.body.cards,set)
+    res.status(200).send({set,cards:cardUpdates});
   } catch(e) {
     res.status(400).send(e);
   }
@@ -170,26 +154,16 @@ router.delete('/sets/:id', auth, async (req, res) => {
 
   try {
       const set = await Set.findOne({ _id, owner: req.user._id });
-      log.silly("Set", set)
 
       if (!set) {
-        return res.status(404).send()
+        return res.status(404).send("Unable to find the set with given id")
       }
-      // const cards = await set.findSetCards();
-      // log.silly("Cards", cards)
-      // const cardIds = cards.map(elem=>elem._id);
-      // log.silly("Card ids", cardIds)
+
 
       const deletedCards = await set.deleteCards()
-      await Set.deleteOne({_id:set._id})
-      // await Card.deleteMany({
-      //   _id:{
-      //     $in:cardIds
-      //   }
-      // })
-      res.send({set, deletedCards})
+      const setResponse = await Set.deleteOne({_id:set._id})
+      res.send({set:setResponse, cards:deletedCards})
   } catch (e) {
-      console.log(e)
       return res.status(500).send()
   }
 

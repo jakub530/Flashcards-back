@@ -26,6 +26,16 @@ cardSchema.virtual('sessionItems', {
   foreignField: 'card'
 })
 
+cardSchema.statics.findSetCards = async (setIds) => {
+  const cards = await Card.find({
+    set:{
+      $in:setIds
+    }
+  })
+
+  return cards
+}
+
 cardSchema.methods.toJSON = function () {
   const card = this
   const cardObject = card.toObject()
@@ -34,6 +44,7 @@ cardSchema.methods.toJSON = function () {
 
   return cardObject;
 }
+
 
 const Card = mongoose.model('Card', cardSchema)
 

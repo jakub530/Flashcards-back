@@ -22,33 +22,34 @@ const sessionSchema = new mongoose.Schema({
   state: {
     currentItem: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
       ref:'sessionItem',      
     },
     currentBucket: {
-      Number
+      type:Number
     },
     currentCount: {
-      Number
+      type:Number
     },
     itemFlag: {
       type: String,
-      enum: ['public','private'],
-      default: 'private'  
+      enum: ['correct','false','pending'],
     },
-    bucketCount: [
-      Number  
-    ]
+    bucketLevels: [{
+      type:Number  
+    }]
   },
-  next_item: {
-    type: Map
-  },
-  sets: [{
-    set: {
+  sets: [
+    {
       type:mongoose.Schema.Types.ObjectId,
       ref:Set
     }
-  }]
+  ],
+  settings: {
+    buckets: {
+      type:Number,
+      default:5
+    }
+  }
 }, {
     timestamps: true,
 })
@@ -59,21 +60,19 @@ sessionSchema.virtual('sessionItems', {
   foreignField: 'session'
 })
 
-sessionSchema.statics.initializeSessionItems = async function(setIds) {
-  const session = this;
-  const cards = await Card.find({
-    'set': { $in: setIds}
-  })
 
-  // TO DO: Need to create a session item for each of the cards here
 
-  return 
-}
-
-sessionSchema.method.initializeSessionState = async function()
+sessionSchema.methods.initializeSessionState = async function(sessionItems)
 {
   const session = this;
-  // TO DO: Need to initalize session state in here
+  session.state.currentBucket = 1;
+  session.state.currentItem = sessionItems[Math.floor(Math.random()*sessionItems.length)];
+  session.state.currentCount = 0
+  session.state.itemFlag = "pending"
+  session.state.bucketLevels = [sessionItems.length, ...Array(session.settings.buckets).fill(0)]
+  await session.save()
+
+  return session;
 }
 
 const Session = mongoose.model('Session', sessionSchema)

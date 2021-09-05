@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken')
 const User = require('../../src/models/user')
 const Set = require('../../src/models/set')
 const Card = require('../../src/models/card')
+const Session = require('../../src/models/session')
 const log = require('../../src/log')
 
 const userIDs = [
@@ -187,12 +188,31 @@ const newCards = [
   }
 ]
 
+const sessionID = [
+  new mongoose.Types.ObjectId(),
+]
 
+const Sessions = [
+  {
+    _id:sessionID[0],
+    name:"Session Name",
+    description:"Session Description",
+    owner:userIDs[1]
+  }
+]
+
+const newSessions = [
+  {
+    name:"My Session",
+    description:"Test description",
+  }
+]
 
 const setupDatabase = async() => {
   await User.deleteMany()
   await Set.deleteMany()
   await Card.deleteMany()
+  await Session.deleteMany()
 
   // Save all users to the database
   const savedUsers = await Promise.all(Users.map(async (user) => {
@@ -206,6 +226,10 @@ const setupDatabase = async() => {
   const savedCards = await Promise.all(Cards.map(async (card) => {
     return savedCard = await new Card(card).save()
   }))
+
+  const savedSessions = await Promise.all(Sessions.map(async (session) => {
+    return savedSession = await new Session(session).save()
+  }))
 }
 
 module.exports = {
@@ -215,5 +239,7 @@ module.exports = {
   newSets,
   Cards,
   newCards,
+  Sessions,
+  newSessions,
   setupDatabase
 }
