@@ -32,3 +32,16 @@ test('Should fail to create session without sets', async () => {
   expect(response.error.text).toBe("Please add some cards")
 })
 
+
+test('Should evolve session correctly', async () => {
+  const fixUser = Users[1]
+  const newSession = newSessions[0]
+  const fixSession = Sessions[0]
+
+  const response = await request(app)
+  .post(`/session/evolve/${fixSession._id}`)
+  .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
+  .send({update:"next"})
+  .expect(200)
+
+})

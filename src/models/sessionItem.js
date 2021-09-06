@@ -15,9 +15,13 @@ const sessionItemSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  finished: {
+    type:Boolean,
+    default:false,
+  },
   history: [{
     date: {
-      type: Date,
+      type: Date, 
       required:true
     },
     outcome: {
@@ -34,11 +38,54 @@ sessionItemSchema.statics.initialize = async (sessionId, cardId) => {
   const newSessionItem = await new SessionItem({
     session:sessionId,
     card:cardId,
-    bucket:1,
+    bucket:0,
     history:[],
   }).save()
 
   return newSessionItem
+}
+
+sessionItemSchema.methods.addHistoryEntry = function(update) {
+  sessionItem = this
+  sessionItem.history = [
+    ...sessionItem.history,
+    {
+      outcome:update,
+      date:Date.now()
+    }
+  ]
+  return sessionItem;
+}
+
+sessionItemSchema.methods.updateBucket = function(update, policy, bucketCount, session) {
+  sessionItem = this
+  const oldBucket = sessionItem.bucket
+  if(update==="correct")
+  {
+    if(sessionItem.bucket < bucketCount - 1)
+    {
+      sessionItem.bucket += 1;
+    }
+    else if(sessionItem.bucket === bucketCount)
+    {
+      sessionItem.bucket = -1;
+      sessionItem.finished = true;
+    }
+  } else 
+  {
+    if(!sessionItem.bucket === 1)
+    {
+      if(policy === "normal")
+      {
+        sessionItem.bucket -= 1;
+      }
+    }
+  }
+  const newBucket = sessionItem.bucket
+  session.state.bucketLevels[oldBucket] -= 1
+  session.state.bucketLevels[newBucket] += 1
+
+  return  sessionItem;
 }
 
 

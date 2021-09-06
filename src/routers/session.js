@@ -40,5 +40,27 @@ router.post('/session', auth, async (req, res) => {
   }
 })
 
+// Create new session
+router.post('/session/evolve/:id', auth, async (req, res) => {
+  const user = req.user
+  const sessionId = req.params.id
+  const update = req.body.update
+  console.log(user._id)
+  const session = await Session.findOne({ _id:sessionId, owner:user._id })
+  
+  const updatedSession = await session.updateState(update);
+  console.log(session)
+  console.log(update)
+  console.log(updatedSession)
+  try {
+
+  
+    res.status(200).send();
+  } catch(e) {
+    res.status(400).send(e);
+  }
+})
+
+
 
 module.exports = router

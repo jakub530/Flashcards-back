@@ -4,6 +4,7 @@ const User = require('../../src/models/user')
 const Set = require('../../src/models/set')
 const Card = require('../../src/models/card')
 const Session = require('../../src/models/session')
+const SessionItem = require('../../src/models/sessionItem')
 const log = require('../../src/log')
 
 const userIDs = [
@@ -192,12 +193,32 @@ const sessionID = [
   new mongoose.Types.ObjectId(),
 ]
 
+const sessionItemIDs = [
+  new mongoose.Types.ObjectId(),
+  new mongoose.Types.ObjectId(),
+  new mongoose.Types.ObjectId(),
+  new mongoose.Types.ObjectId(),
+  new mongoose.Types.ObjectId(),
+] 
+
 const Sessions = [
   {
     _id:sessionID[0],
     name:"Session Name",
     description:"Session Description",
-    owner:userIDs[1]
+    owner:userIDs[1],
+    state: {
+      bucketLevels: [ 5, 0, 0, 0, 0 ],
+      currentBucket: 0,
+      currentItem: sessionItemIDs[0],
+      currentCount: 0,
+      itemFlag: 'correct'
+    },
+    sets: [
+      setIDs[1],
+      setIDs[2]
+    ],
+    settings: { buckets: 5 },
   }
 ]
 
@@ -208,11 +229,52 @@ const newSessions = [
   }
 ]
 
+
+
+const SessionItems = [
+  {
+    _id: sessionItemIDs[0],
+    session:sessionID[0],
+    bucket:0,
+    card:cardIDs[4],
+    history:[]
+  },
+  {
+    _id: sessionItemIDs[1],
+    bucket:0,
+    session:sessionID[0],
+    card:cardIDs[5],
+    history:[]
+  },
+  {
+    _id: sessionItemIDs[2],
+    bucket:0,
+    session:sessionID[0],
+    card:cardIDs[6],
+    history:[]
+  },
+  {
+    _id: sessionItemIDs[3],
+    bucket:0,
+    session:sessionID[0],
+    card:cardIDs[7],
+    history:[]
+  },
+  {
+    _id: sessionItemIDs[4],
+    bucket:0,
+    session:sessionID[0],
+    card:cardIDs[8],
+    history:[]
+  },
+]
+
 const setupDatabase = async() => {
   await User.deleteMany()
   await Set.deleteMany()
   await Card.deleteMany()
   await Session.deleteMany()
+  await SessionItem.deleteMany()
 
   // Save all users to the database
   const savedUsers = await Promise.all(Users.map(async (user) => {
@@ -229,6 +291,10 @@ const setupDatabase = async() => {
 
   const savedSessions = await Promise.all(Sessions.map(async (session) => {
     return savedSession = await new Session(session).save()
+  }))
+
+  const savedSessionItems = await Promise.all(SessionItems.map(async (sessionItem) => {
+    return savedSessionItem = await new SessionItem(sessionItem).save()
   }))
 }
 
