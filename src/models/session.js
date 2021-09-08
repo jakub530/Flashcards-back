@@ -1,9 +1,6 @@
 const mongoose = require('mongoose')
-const Set = require('./set')
 const SessionItem = require('./sessionItem')
-const Card = require('./card')
 const log = require('../log')
-const { forEach } = require('lodash')
 
 const sessionSchema = new mongoose.Schema({
   name: {
@@ -38,7 +35,7 @@ const sessionSchema = new mongoose.Schema({
     },
     itemFlag: {
       type: String,
-      enum: ['correct','false','pending'],
+      enum: ['correct','false','pending','corrected'],
     },
     bucketLevels: [{
       type:Number  
@@ -148,7 +145,7 @@ sessionSchema.methods.selectNewItem = async function()
       $nin:session.state.previousItems
     }
   })
-  console.log(session.state.currentBucket)
+  // console.log(session.state.currentBucket)
   if(!nextItem)
   {
     nextItem = await SessionItem.findOne({
@@ -261,16 +258,15 @@ sessionSchema.methods.updateState = async function(update)
 {
   let session = this
   let sessionItem = await session.getCurrentItem();
+  let stateUpdate = null;
 
-  if(update==="next" && session.state.itemFlag!== "pending")
+  if(update==="next" && (session.state.itemFlag=="correct" || session.state.itemFlag=="corrected"))
   {
     // To Do -think of a way of calling bucket update policies
     // Don't hardcode bucket update policy
     sessionItem = sessionItem.updateBucket(
-      session.state.itemFlag,
-      "normal",
-      session.settings.buckets,
       session,
+      "normal",
     )
     session.updatePreviousItems();
 
@@ -290,11 +286,34 @@ sessionSchema.methods.updateState = async function(update)
         sessionItem = sessionItem.addHistoryEntry(update)
       }
     }
+    if(session.state.itemFlag==="false" && update==="correct")
+    {
+      session.state.itemFlag = "corrected"
+    }
   }
 
   await sessionItem.save()
   return await session.save();
 }
+
+sessionSchema.pre('deleteOne', {document:true}, async function (next) {
+  const session = this;
+  const query  = {session:session._id}
+  // const sessionItems = await session.populate({
+  //   path:'sessionItems',
+  //   query,
+  //   options:{
+
+  //   }
+  // }).execPopulate()
+  const sessionItems = await SessionItem.find({session:session._id});
+
+  await Promise.all(sessionItems.map(async ({_id}) => {
+    const sessionItem = await SessionItem.findOne({_id});
+    await sessionItem.deleteOne();
+  }))
+})
+
 
 const Session = mongoose.model('Session', sessionSchema)
 

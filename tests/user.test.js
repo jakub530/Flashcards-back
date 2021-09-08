@@ -1,6 +1,10 @@
 const request = require('supertest')
 const app = require('../src/app')
 const User = require('../src/models/user')
+const Set = require('../src/models/set')
+const Session = require('../src/models/session')
+const SessionItem = require('../src/models/sessionItem')
+const Card = require('../src/models/card')
 const { Users, newUsers, setupDatabase } = require('./fixtures/db')
 
 
@@ -73,16 +77,21 @@ test('Should not get profile for unathorized user', async () => {
 })
 
 test('Should delete account for user', async() => {
-  const fixUser = Users[0]
+  const fixUser = Users[1]
   const response = await request(app)
     .delete('/users/me')
     .set('Authorization', `Bearer ${fixUser.tokens[0].token}`)
-    .send()
     .expect(200)
 
   // Ensure that the user was deleted
   const user = await User.findById(response.body._id)
   expect(user).toBeNull()
+
+  const sets = await Set.find({owner:fixUser._id})
+  const sessions = await Session.find({owner:fixUser._id})
+
+  expect(sets.length).toBe(0)
+  expect(sessions.length).toBe(0)
 })
 
 test('Should not delete account for unathenticated', async () => {

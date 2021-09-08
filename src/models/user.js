@@ -2,6 +2,8 @@ const mongoose = require('mongoose')
 const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const Set = require('./set')
+const Session =  require('./session')
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -96,12 +98,21 @@ userSchema.pre('save', async function (next) {
 })
 
 // Delete user tasks when user is removed 
-// userSchema.pre('remove', async function (next) {
-//     const user = this 
-//     await Task.deleteMany({ owner: user._id })
+userSchema.pre('deleteOne', {document:true},  async function (next) {
+  const user = this 
+  const sets = await Set.find({owner:user._id})
+  const sessions = await Session.find({owner:user._id})
 
-//     next()
-// })
+  await Promise.all(sets.map(async ({_id}) => {
+    set = await Set.findOne({_id});
+    await set.deleteOne()
+  }))
+
+  await Promise.all(sessions.map(async ({_id}) => {
+    session = await Session.findOne({_id});
+    await session.deleteOne()
+  }))
+})
 
 const User = mongoose.model('User', userSchema)
 

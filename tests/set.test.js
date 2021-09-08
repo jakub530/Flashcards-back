@@ -2,6 +2,7 @@ const request = require('supertest')
 const app = require('../src/app')
 const User = require('../src/models/user')
 const Set = require('../src/models/set')
+const Card = require('../src/models/card')
 const { Users, newSets, Sets, newCards, Cards, setupDatabase} = require('./fixtures/db')
 const log = require('../src/log')
 
@@ -21,7 +22,7 @@ test('Should save set succesfully', async () => {
   const cards = response.body.cards
 
   // Check if the set has been created correctly
-  log.silly("response set", set) 
+  // log.silly("response set", set) 
   expect(set).toMatchObject(
     newSet
   )
@@ -278,9 +279,10 @@ test('Should delete a set and its cards', async () => {
     .expect(200)
 
   const set = await Set.findOne({ _id:setID});
-  expect(response.body.cards.deletedCount).toBe(4)
+  
   expect(set).toBeNull()
-    
+  const cards = await Card.find({set:setID})
+  expect(cards.length).toBe(0)
 })
  
  

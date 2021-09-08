@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+// const Session = require('./session')
 
 const sessionItemSchema = new mongoose.Schema({
   session: {
@@ -57,8 +58,11 @@ sessionItemSchema.methods.addHistoryEntry = function(update) {
   return sessionItem;
 }
 
-sessionItemSchema.methods.updateBucket = function(update, policy, bucketCount, session) {
+sessionItemSchema.methods.updateBucket = function(session, policy) {
   sessionItem = this
+  update = session.state.itemFlag
+  bucketCount = session.settings.buckets
+
   const oldBucket = sessionItem.bucket
   if(update==="correct")
   {
@@ -87,6 +91,20 @@ sessionItemSchema.methods.updateBucket = function(update, policy, bucketCount, s
 
   return  sessionItem;
 }
+
+// sessionItemSchema.pre('deleteOne', {document:true}, async function (next) {
+//   const sessionItem = this
+//   const session = await Session.findOne({_id:sessionItem._id})
+//   if(!session)
+//   {
+//     return;
+//   }
+//   else
+//   {
+
+//   }
+
+// })
 
 
 const SessionItem = mongoose.model('SessionItem', sessionItemSchema)

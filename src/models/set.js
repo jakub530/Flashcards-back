@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const Card = require('./card')
+const Session = require('./session')
 const log = require('../log')
 
 const setSchema = new mongoose.Schema({
@@ -70,13 +71,13 @@ setSchema.methods.updateCards = async function(cards) {
   const set = this
   
   const updates = await Promise.all(cards.map(async ({_id, term,definition}) => {
-    log.silly("UPDATE ID", _id)
-    log.silly("UPDATE term", term)
-    log.silly("UPDATE definition", definition)
+    // log.silly("UPDATE ID", _id)
+    // log.silly("UPDATE term", term)
+    // log.silly("UPDATE definition", definition)
     return await Card.replaceOne({_id},{term, definition, set})
   }))
 
-  log.silly("Updates", updates)
+  // log.silly("Updates", updates)
 
   return updates
 }
@@ -86,19 +87,40 @@ setSchema.methods.deleteCards = async function(cardIds = null) {
 
   if(!cardIds) {
     const cards = await set.findSetCards();
-    log.silly("Cards", cards)
+    // log.silly("Cards", cards)
     cardIds = cards.map(elem=>elem._id);
   }
-  log.silly("Card ids", cardIds)
+  // log.silly("Card ids", cardIds)
 
   deletedCards = await Card.deleteMany({
     _id:{
       $in:cardIds
     }
   })
-  log.silly("deletedCards", deletedCards)
+  // log.silly("deletedCards", deletedCards)
   return deletedCards
 }
+
+setSchema.pre('deleteOne', {document:true}, async function (next) {
+  const set = this
+  const cards = await Card.find({set:set._id})
+  const sessions = await Session.find({
+    "sets":set._id
+  })
+
+
+  await Promise.all(sessions.map(async (session) => {
+    session.sets = session.sets.filter((session_set) => {
+      return session_set !== set._id
+    })
+    await session.save()
+  }))
+
+  await Promise.all(cards.map(async ({_id}) => {
+    card = await Card.findOne({_id});
+    await card.deleteOne()
+  }))
+})
 
 const Set = mongoose.model('Set', setSchema)
 

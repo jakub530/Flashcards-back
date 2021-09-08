@@ -151,7 +151,6 @@ router.patch('/sets/:id', auth, async (req, res) => {
 // Delete existing set
 router.delete('/sets/:id', auth, async (req, res) => {
   const _id = req.params.id
-
   try {
       const set = await Set.findOne({ _id, owner: req.user._id });
 
@@ -159,10 +158,8 @@ router.delete('/sets/:id', auth, async (req, res) => {
         return res.status(404).send("Unable to find the set with given id")
       }
 
-
-      const deletedCards = await set.deleteCards()
-      const setResponse = await Set.deleteOne({_id:set._id})
-      res.send({set:setResponse, cards:deletedCards})
+      await set.deleteOne();
+      res.send(set)
   } catch (e) {
       return res.status(500).send()
   }

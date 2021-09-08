@@ -44,4 +44,5 @@ test('Should evolve session correctly', async () => {
   .send({update:"next"})
   .expect(200)
 
+  // console.log(response.body.state)
 })

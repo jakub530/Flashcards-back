@@ -2,7 +2,9 @@ const express = require('express')
 const router = new express.Router()
 const auth = require('../middleware/auth')
 const User = require('../models/user')
+const Session = require('../models/session')
 const log = require('../log')
+const {filterUpdates} = require('../utility/routers')
 
 // Create new user
 router.post('/users', async (req, res) => {
@@ -58,15 +60,13 @@ router.post('/users/logoutAll', auth, async (req,res) => {
 
 // Modify current user
 router.patch('/users/me', auth, async (req, res) => {
-  const updates = Object.keys(req.body)
-  const allowedUpdates = ['name', 'email', 'password', 'age']
+  const {valid, updates} = filterUpdates(
+    req.body, 
+    ['email', 'name', 'password']
+  )
 
-  const isValidOperation = updates.every((update) => {
-      return allowedUpdates.includes(update)
-  })
-
-  if (!isValidOperation) {
-      return res.status(400).send({error:'Invalid updates!'})
+  if (!valid) {
+    return res.status(400).send({error:'Invalid updates!'})
   }
 
   try {
@@ -85,12 +85,13 @@ router.patch('/users/me', auth, async (req, res) => {
 
 // Delete current user
 router.delete('/users/me', auth, async (req,res) => {
-    try {
-        await req.user.remove()
-        res.send(req.user)
-    } catch (e) {
-        res.status(500).send()
-    }
+  try {
+    await req.user.deleteOne()
+    res.send(req.user)
+  } catch (e) {
+    console.log(e)
+    res.status(500).send()
+  }
 })
 
 module.exports = router

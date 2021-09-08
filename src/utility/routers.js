@@ -8,12 +8,12 @@ const filterUpdates = (updates, allowedUpdates) => {
   const isValidOperation = updateKeys.every((update) => {
     return allowedUpdates.includes(update)
   })
-  log.silly("Valid:", isValidOperation)
+  // log.silly("Valid:", isValidOperation)
   if (!isValidOperation) {
-    return "invalid"
+    return {valid:false}
   }
 
-  return updateKeys
+  return {valid:true,updates:updateKeys}
 }
 
 // 1. Get list of all cards currently 

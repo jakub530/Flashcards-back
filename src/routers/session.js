@@ -30,9 +30,9 @@ router.post('/session', auth, async (req, res) => {
       return sessionItem = await SessionItem.initialize(savedSession._id,card._id)
     }))
 
-    console.log(sessionItems)
+    // console.log(sessionItems)
     await savedSession.initializeSessionState(sessionItems);
-    console.log(savedSession);
+    // console.log(savedSession);
   
     res.status(200).send();
   } catch(e) {
@@ -45,17 +45,13 @@ router.post('/session/evolve/:id', auth, async (req, res) => {
   const user = req.user
   const sessionId = req.params.id
   const update = req.body.update
-  console.log(user._id)
-  const session = await Session.findOne({ _id:sessionId, owner:user._id })
-  
-  const updatedSession = await session.updateState(update);
-  console.log(session)
-  console.log(update)
-  console.log(updatedSession)
-  try {
 
+
+  try {
+    const session = await Session.findOne({ _id:sessionId, owner:user._id })
+    const updatedSession = await session.updateState(update);
   
-    res.status(200).send();
+    res.status(200).send(updatedSession);
   } catch(e) {
     res.status(400).send(e);
   }

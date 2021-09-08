@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const SessionItem = require('./sessionItem')
 
 const cardSchema = new mongoose.Schema({
   term: {
@@ -44,6 +45,27 @@ cardSchema.methods.toJSON = function () {
 
   return cardObject;
 }
+
+// cardSchema.pre('deleteMany', async function (next) {
+//   // console.log(this.getQuery())
+//   const cards  = await Card.find(this.getQuery())
+//   await Promise.all(cards.map(async (card) => {
+    
+//   }))
+//   // console.log(cards)
+// })
+
+cardSchema.pre('deleteOne', {document:true}, async function (next) {
+  const card = this
+  const sessionItems = await SessionItem.find({card:card._id})
+
+  await Promise.all(sessionItems.map(async ({_id}) => {
+    sessionItem = await SessionItem.findOne({_id});
+    await sessionItem.deleteOne()
+  }))
+})
+
+
 
 
 const Card = mongoose.model('Card', cardSchema)
