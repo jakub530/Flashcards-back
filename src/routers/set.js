@@ -11,7 +11,7 @@ const {filterUpdates, updateCards} = require('../utility/routers')
 router.post('/sets', auth, async (req, res) => {
   const {cards, set} =  req.body
   const userId = req.user._id
-
+  console.log("Received data", set)
   try {
     set.owner = userId;
     const newSet = new Set(set)
@@ -66,26 +66,26 @@ router.post('/sets/copy/:id', auth, async (req, res) => {
 
 // Get all sets (public or not can be controlled by flag)
 router.get('/sets', auth, async (req, res) => {
-  const access = req.body.access
-  let sets
+  // const access = req.body.access
+  // let sets
 
   try {
-    switch(access) {
-      case "public":
-        sets = await Set.find({access:"public", owner:{$ne:req.user._id}})
-        break;
-      case "all":
-        sets = await Set.find({
-          $or: [
-            {access:"public"}, 
-            {owner:{$ne:req.user._id}}
-          ]
-        })
-        break;
-      default:
-        sets = await Set.find({owner:req.user._id})
-        break;
-    }
+    // switch(access) {
+    //   case "public":
+    //     sets = await Set.find({access:"public", owner:{$ne:req.user._id}})
+    //     break;
+    //   case "all":
+    //     sets = await Set.find({
+    //       $or: [
+    //         {access:"public"}, 
+    //         {owner:{$ne:req.user._id}}
+    //       ]
+    //     })
+    //     break;
+    //   default:
+    const sets = await Set.find({owner:req.user._id})
+    //     break;
+    // }
 
     res.status(200).send(sets);
   } catch(e) {
@@ -123,27 +123,27 @@ router.patch('/sets/:id', auth, async (req, res) => {
 
   try {
     const set = await Set.findOne({ _id, owner: req.user._id })
+    console.log("Looking for set")
     if(req.body.set)
     {
+      console.log("Found a set")
       allowedUpdates = ["name", "description"]
       const updates = filterUpdates(req.body.set, ["name", "description"])
-      if(updates=="invalid")
+      if(!updates.valid)
       {
         return res.status(400).send({error:'Invalid updates!'})
       }
 
-      if(updates)
-      {
-        updates.forEach((update) => set[update] = req.body.set[update])
-        await set.save()
-      }
+
+      updates.updates.forEach((update) => set[update] = req.body.set[update])
+      await set.save()
+
 
     }
-
-    
     const cardUpdates = await updateCards(req.body.cards,set)
     res.status(200).send({set,cards:cardUpdates});
   } catch(e) {
+    console.log(e)
     res.status(400).send(e);
   }
 })

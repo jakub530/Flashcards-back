@@ -58,5 +58,18 @@ router.post('/session/evolve/:id', auth, async (req, res) => {
 })
 
 
+router.get('/session', auth, async (req, res) => {
+  const user = req.user
+  try {
+    const sessions = await Session.find({ owner:user._id })
+
+  
+    res.status(200).send(sessions);
+  } catch(e) {
+    res.status(400).send(e);
+  }
+})
+
+
 
 module.exports = router

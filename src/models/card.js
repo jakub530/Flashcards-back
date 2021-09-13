@@ -46,23 +46,22 @@ cardSchema.methods.toJSON = function () {
   return cardObject;
 }
 
-// cardSchema.pre('deleteMany', async function (next) {
-//   // console.log(this.getQuery())
-//   const cards  = await Card.find(this.getQuery())
-//   await Promise.all(cards.map(async (card) => {
-    
-//   }))
-//   // console.log(cards)
-// })
+cardSchema.pre('deleteMany', async function (next) {
+  if(Object.keys(this.getQuery()).length !== 0)
+  {
+    const cardIds = await Card.find(this.getQuery(), "_id");
+    const cardList = cardIds.map(elem => elem._id)
+    const sessionItems = await SessionItem.deleteMany({
+      card:{
+        $in:cardList
+      }
+    });
+  }
+})
 
 cardSchema.pre('deleteOne', {document:true}, async function (next) {
   const card = this
-  const sessionItems = await SessionItem.find({card:card._id})
-
-  await Promise.all(sessionItems.map(async ({_id}) => {
-    sessionItem = await SessionItem.findOne({_id});
-    await sessionItem.deleteOne()
-  }))
+  const sessionItems = await SessionItem.deletOne({card:card._id})
 })
 
 

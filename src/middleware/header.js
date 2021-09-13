@@ -1,14 +1,5 @@
-const express = require('express')
-require('./db/mongoose')
-const userRouter = require('./routers/user')
-const setRouter = require('./routers/set')
-const sessionRouter = require('./routers/session')
-
-const app = express()
-
-app.use(express.json())
-
-app.use(function (req, res, next) {
+// Add headers before the routes are defined
+const header = app.use(function (req, res, next) {
 
   // Website you wish to allow to connect
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
@@ -17,7 +8,7 @@ app.use(function (req, res, next) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
 
   // Request headers you wish to allow
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
 
   // Set to true if you need the website to include cookies in the requests sent
   // to the API (e.g. in case you use sessions)
@@ -27,8 +18,4 @@ app.use(function (req, res, next) {
   next();
 });
 
-app.use(userRouter)
-app.use(setRouter)
-app.use(sessionRouter)
-
-module.exports = app
+module.exports = header

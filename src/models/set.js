@@ -37,16 +37,9 @@ setSchema.virtual('cards', {
   foreignField: 'set'
 })
 
-// setSchema.virtual('sessions', {
-//   ref: 'Session',
-//   localField: '_id',
-//   foreignField: 'sets'
-// })
-
 setSchema.methods.findSetCards = async function () {
   const set = this
   const cards = await Card.find({ set: set._id});
-  // log.silly("Cards", cards)
   
   return cards 
 } 
@@ -58,12 +51,19 @@ setSchema.methods.insertCards = async function(cards) {
   {
     return null;
   }
-
+  console.log("Inserting Cards")
   cards.forEach((elem) => {
     elem.set = set._id;
   })
-  const insertedCards = await Card.insertMany(cards)
+  console.log(cards)
+  let insertedCards;
+  try {
+    insertedCards = await Card.insertMany(cards)
+  } catch(e) {
+    console.log(e)
+  }
 
+  console.log("inSerting many cards")
   return insertedCards;
 }
 
@@ -71,13 +71,8 @@ setSchema.methods.updateCards = async function(cards) {
   const set = this
   
   const updates = await Promise.all(cards.map(async ({_id, term,definition}) => {
-    // log.silly("UPDATE ID", _id)
-    // log.silly("UPDATE term", term)
-    // log.silly("UPDATE definition", definition)
     return await Card.replaceOne({_id},{term, definition, set})
   }))
-
-  // log.silly("Updates", updates)
 
   return updates
 }
@@ -87,38 +82,32 @@ setSchema.methods.deleteCards = async function(cardIds = null) {
 
   if(!cardIds) {
     const cards = await set.findSetCards();
-    // log.silly("Cards", cards)
     cardIds = cards.map(elem=>elem._id);
   }
-  // log.silly("Card ids", cardIds)
 
   deletedCards = await Card.deleteMany({
     _id:{
       $in:cardIds
     }
   })
-  // log.silly("deletedCards", deletedCards)
   return deletedCards
 }
 
 setSchema.pre('deleteOne', {document:true}, async function (next) {
   const set = this
-  const cards = await Card.find({set:set._id})
+  await Card.deleteMany({set:set._id})
   const sessions = await Session.find({
     "sets":set._id
   })
+  // log.silly("Me testing deleting","Deleteing one set");
 
 
   await Promise.all(sessions.map(async (session) => {
     session.sets = session.sets.filter((session_set) => {
       return session_set !== set._id
     })
-    await session.save()
-  }))
-
-  await Promise.all(cards.map(async ({_id}) => {
-    card = await Card.findOne({_id});
-    await card.deleteOne()
+    await session.adjustState()
+    
   }))
 })
 

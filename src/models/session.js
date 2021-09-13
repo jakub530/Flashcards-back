@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const SessionItem = require('./sessionItem')
 const log = require('../log')
+const newLog = require('../logLevelSetup');
 
 const sessionSchema = new mongoose.Schema({
   name: {
@@ -39,7 +40,11 @@ const sessionSchema = new mongoose.Schema({
     },
     bucketLevels: [{
       type:Number  
-    }]
+    }],
+    noItems: {
+      type: Boolean,
+      default: false,
+    }
   },
   sets: [
     {
@@ -117,7 +122,16 @@ sessionSchema.methods.pickBucket = function()
         if(c > 0) a.push(i);
         return a;
       }, []);
-      session.state.currentBucket = filledBuckets.at(-1);
+
+      if(filledBuckets.length === 0)
+      {
+        session.state.noItems = true;
+      }
+      else
+      {
+        session.state.currentBucket = filledBuckets.at(-1);
+      }
+
     }
     else
     {
@@ -172,7 +186,7 @@ sessionSchema.methods.refreshBucketsCounts = async function()
   session.state.bucketLevels.fill(0);
 
   sessionItems.forEach(elem => session.state.bucketLevels[elem.bucket] += 1)
-  return await session.save()
+  // return await session.save()
 }
 
 // This could be invocked in case of decreased number of buckets
@@ -199,6 +213,8 @@ sessionSchema.methods.adjustState = async function()
 {
   const session = this
 
+  await session.refreshBucketsCounts()
+
   // First take care of previous items
   await session.adjustPreviousItems()
 
@@ -206,7 +222,21 @@ sessionSchema.methods.adjustState = async function()
   await session.adjustBucket()
 
   // Adjust current item
-  await session.adjustCurrentItem()
+  if (!session.state.noItems)
+  {
+    await session.adjustCurrentItem()
+    await session.updateOne()
+  }
+  else
+  {
+    // newLog.debug("This is new logger")
+    // newLog.warn("This is new logger")
+    // console.log("Finished bucket");
+    session.state.currentItem = null;
+    session.state.previousItems = []
+    session.state.currentBucket = 0
+    session.state.currentCount = 0
+  }
 
 }
 
@@ -227,18 +257,23 @@ sessionSchema.methods.adjustBucket = async function()
     session.pickBucket()
   }
 
-  await session.save()
+  // await session.save()
 }
 
 sessionSchema.methods.adjustPreviousItems = async function() 
 {
   const session = this
+
   const previousItems = await SessionItem.find({id:{
     $in:session.state.previousItems
   }})
+  if(!previousItems)
+  {
+    return
+  }
   const previousIds = previousItems.map(elem => elem._id)
   session.state.previousItems = previousIds
-  await session.save()
+  // await session.save()
 }
 
 sessionSchema.methods.adjustCurrentItem = async function()
@@ -252,6 +287,7 @@ sessionSchema.methods.adjustCurrentItem = async function()
   {
     const nextItem = await session.selectNewItem();
   }
+  // session.save()
 }
 
 sessionSchema.methods.updateState = async function(update)
@@ -298,20 +334,7 @@ sessionSchema.methods.updateState = async function(update)
 
 sessionSchema.pre('deleteOne', {document:true}, async function (next) {
   const session = this;
-  const query  = {session:session._id}
-  // const sessionItems = await session.populate({
-  //   path:'sessionItems',
-  //   query,
-  //   options:{
-
-  //   }
-  // }).execPopulate()
-  const sessionItems = await SessionItem.find({session:session._id});
-
-  await Promise.all(sessionItems.map(async ({_id}) => {
-    const sessionItem = await SessionItem.findOne({_id});
-    await sessionItem.deleteOne();
-  }))
+  await SessionItem.deleteMany({session:session._id})
 })
 
 

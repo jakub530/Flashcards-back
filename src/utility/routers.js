@@ -16,31 +16,30 @@ const filterUpdates = (updates, allowedUpdates) => {
   return {valid:true,updates:updateKeys}
 }
 
+
+
 // 1. Get list of all cards currently 
 const updateCards = async (updates, set) => {
-  const [cardsToUpdate,newCards] = _.partition(updates,elem => elem["_id"])
-  const IdsToUpdate = cardsToUpdate.map((e) => e._id)
+  const newIds = updates.map((e) => e._id) 
   const currentCards = await set.findSetCards()
   const currentCardsIds = currentCards.map((e)=> e._id.toString())
-  const cardsToDelete = _.difference(currentCardsIds, IdsToUpdate)
 
-  const insertedCards = await set.insertCards(newCards)
-  const deletedCards = await set.deleteCards(cardsToDelete)
-  const updatedCards = await set.updateCards(cardsToUpdate)
+  const idToDelete = _.difference(currentCardsIds, newIds)
+  const idToAdd = _.difference(newIds, currentCardsIds)
+  const idToUpdate = _.difference(newIds, idToAdd)
 
-  
+  const cardToAdd =   updates.filter((elem) => idToAdd.includes(elem._id))
+  const cardToUpdate = updates.filter((elem) => idToUpdate.includes(elem._id))
+  console.log("Debug 1")
 
-  // log.silly("newCards", newCards)
-  // log.silly("existingCards", cardsToUpdate)
-  // log.silly("existingIds", IdsToUpdate)
-  // log.silly("currentCards", currentCards)
-  // log.silly("currentCardsIds", currentCardsIds)
-  // log.silly("cardsToDelete", cardsToDelete)
-
-  // console.log("insertedCards", insertedCards)
-  // console.log("deletedCards", deletedCards)
-  // console.log("updatedCards", updatedCards)
-
+  console.log("Debug 1.5")
+  const cardsToDelete = _.difference(currentCardsIds, idToUpdate)
+  console.log("Debug 1.75")
+  const insertedCards = await set.insertCards(cardToAdd)
+  console.log("Debug 2")
+  const deletedCards = await set.deleteCards(idToDelete)
+  const updatedCards = await set.updateCards(cardToUpdate)
+  console.log("Debug 3")
   return({insertedCards, deletedCards, updatedCards})
 }
 

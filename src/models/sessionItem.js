@@ -92,21 +92,6 @@ sessionItemSchema.methods.updateBucket = function(session, policy) {
   return  sessionItem;
 }
 
-// sessionItemSchema.pre('deleteOne', {document:true}, async function (next) {
-//   const sessionItem = this
-//   const session = await Session.findOne({_id:sessionItem._id})
-//   if(!session)
-//   {
-//     return;
-//   }
-//   else
-//   {
-
-//   }
-
-// })
-
-
 const SessionItem = mongoose.model('SessionItem', sessionItemSchema)
 
 module.exports = SessionItem
