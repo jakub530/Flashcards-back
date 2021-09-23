@@ -129,7 +129,9 @@ sessionSchema.methods.pickBucket = function()
       }
       else
       {
-        session.state.currentBucket = filledBuckets.at(-1);
+        console.log("Filled Buckets: ", filledBuckets)
+        console.log(typeof filledBuckets)
+        session.state.currentBucket = filledBuckets[filledBuckets.length-1];
       }
 
     }
@@ -152,6 +154,7 @@ sessionSchema.methods.pickBucket = function()
 sessionSchema.methods.selectNewItem = async function()
 {
   let session = this
+  console.log("First attempt at sarching for item")
   let nextItem = await SessionItem.findOne({
     session:session._id,
     bucket:session.state.currentBucket,
@@ -159,6 +162,7 @@ sessionSchema.methods.selectNewItem = async function()
       $nin:session.state.previousItems
     }
   })
+  console.log("Second attempt at sarching for item")
   // console.log(session.state.currentBucket)
   if(!nextItem)
   {
@@ -166,12 +170,14 @@ sessionSchema.methods.selectNewItem = async function()
       session:session._id,
       bucket:session.state.currentBucket
     })
+    console.log("Next item:", nextItem)
     session.state.previousItems = session
       .state
       .previousItems
       .filter(item => item != nextItem._id)
 
   }
+  console.log("Found new item", nextItem)
   session.state.currentItem = nextItem
   session.state.itemFlag = "pending";
   return nextItem
@@ -308,9 +314,10 @@ sessionSchema.methods.updateState = async function(update)
 
 
     session.pickBucket();
-    
+    console.log("Picking new item")
     // Now just get an item 
     await session.selectNewItem();
+    console.log("Picked new item")
   }
   else
   {

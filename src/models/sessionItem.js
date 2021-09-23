@@ -70,14 +70,14 @@ sessionItemSchema.methods.updateBucket = function(session, policy) {
     {
       sessionItem.bucket += 1;
     }
-    else if(sessionItem.bucket === bucketCount)
+    else if(sessionItem.bucket === bucketCount - 1)
     {
       sessionItem.bucket = -1;
       sessionItem.finished = true;
     }
   } else 
   {
-    if(!sessionItem.bucket === 1)
+    if(!sessionItem.bucket === 0)
     {
       if(policy === "normal")
       {
@@ -88,6 +88,8 @@ sessionItemSchema.methods.updateBucket = function(session, policy) {
   const newBucket = sessionItem.bucket
   session.state.bucketLevels[oldBucket] -= 1
   session.state.bucketLevels[newBucket] += 1
+  console.log("Old Bucket", oldBucket)
+  console.log("New Bucket", newBucket)
 
   return  sessionItem;
 }
