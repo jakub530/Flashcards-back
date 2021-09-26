@@ -1,4 +1,4 @@
-const newLog = require('loglevel');
-newLog.setLevel("trace")
+const newLog = require("loglevel");
+newLog.setLevel("trace");
 
-module.exports = newLog
+module.exports = newLog;
