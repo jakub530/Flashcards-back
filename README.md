@@ -21,11 +21,11 @@
 
 #### Properties
 
-| Field Name    | Type           | Required  | Unique |
-| ------------- |:-------------:| :-----:| -----:|
-| term          | String | Yes | No  |
-| definition    | String | Yes | No | 
-| set           | Set    | Yes | No  |
+| Field Name    | Type           | Required  |
+| ------------- |:-------------:| :-----| 
+| term          | String | Yes |
+| definition    | String | Yes |
+| set           | Set    | Yes |
 
 ### Session
 
@@ -33,14 +33,22 @@
 
 #### Properties
 
-| Field Name    | Type           | Required  | Unique | Parent Field |
-| ------------- |:-------------:| :-----:| :-----:| -----:|
-| name          | String | Yes | No  | - |
-| description   | String | Yes | No  | - |
-| owner         | User   | Yes | No  | - |
-| state         | Object   | Yes | No | - |
-| sets          | Array (Set) | Yes | No | - |
-| settings      | Object | Yes | No | - |
+| Field Name    | Type           | Required  | Parent Field |
+| ------------- |:-------------:| :-----:|  -----:|
+| name          | String | Yes   | - |
+| description   | String | Yes   | - |
+| owner         | User   | Yes  | - |
+| sets          | Array (Set) | Yes  | - |
+| state         | Object   | Yes  | - |
+| previousItems      | Array (SessionItem) | Yes  | state |
+| currentItem      | SessionItem | Yes  | state |
+| currentBucket      | Nummber | Yes  | state |
+| currentCount      | Nummber | Yes  | state |
+| itemFlag      | String | Yes  | state |
+| bucketLevels      | Array (Number) | Yes  | state |
+| noItems      | Boolean | Yes  | state |
+| settings      | Object | Yes  | - |
+| buckets      | Number | Yes  | settings |
 
 ### SessionItem
 
@@ -48,11 +56,15 @@
 
 #### Properties
 
-| Field Name    | Type           | Required  | Unique |
-| ------------- |:-------------:| :-----:| -----:|
-| term          | String | Yes | No  |
-| definition    | String | Yes | No | 
-| set           | Set    | Yes | No  |
+| Field Name    | Type           | Parent Field  | 
+| ------------- |:-------------:| -----:| 
+| session          | String ( Session ID) | 
+| card    | String (Card ID) | -  | 
+| bucket           | Number    |   -  | 
+| finished           | Boolean    |   -  | 
+| history            | Array (Object) |   -  | 
+| date | Date | history|
+| outcome | String | history |
 
 ### Set
 
@@ -60,11 +72,13 @@
 
 #### Properties
 
-| Field Name    | Type           | Required  | Unique |
-| ------------- |:-------------:| :-----:| -----:|
-| term          | String | Yes | No  |
-| definition    | String | Yes | No | 
-| set           | Set    | Yes | No  |
+| Field Name    | Type           | Required  
+| ------------- |:-------------:| :-----| 
+| name          | String | Yes | 
+| description    | String | No | 
+| owner           | User    | Yes | 
+| access           | String    | Yes | 
+| settings           | Map    | No | 
 
 ## Endpoints
 
