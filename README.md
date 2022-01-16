@@ -1,12 +1,12 @@
 # Flashcards-back
 
-This repository holds code for backend of https://flashcards-jj.com. It is written in Node.js with Express framework. It is hosted using Heroku. 
+This repository holds code for the backend of https://flashcards-jj.com. It is written in Node.js with Express framework. It is hosted using Heroku. 
 
 ## Schema
 
 ### User
 
-Represents a single user. New user gets created during registration via post endpoint. Tokens field stores list of available tokens, meaning user can be logged in from multiple devices at the same time.
+Represents a single user. New user gets created during registration via post endpoint. Tokens field stores a list of available tokens, meaning the user can be logged in from multiple devices at the same time.
 
 #### Fields
 
@@ -19,7 +19,7 @@ Represents a single user. New user gets created during registration via post end
 
 ### Set
 
-Represents set of flashcards belonging to particular user. Two of the fields (access and settings) are currently unused. The idea of access field is to make it possible to share your sets with other people, provided you set it to public. 
+Represents a set of flashcards belonging to a particular user. Two of the fields (access and settings) are currently unused. The idea of the access field is to make it possible to share your sets with other people, provided you set it to public. 
 
 #### Properties
 
@@ -33,9 +33,9 @@ Represents set of flashcards belonging to particular user. Two of the fields (ac
 
 ### Card
 
-Represents a flashcard of the set. Contains term and definition as well as the set that it belongs to.
+Represents a flashcard of the set. Contains terms and definitions as well as the set that it belongs to.
 
-There are no endpoints affecting single card directly, it is always changed together with other Cards in the Set.
+No endpoints are affecting a single card directly, it is always changed together with other Cards in the Set.
 
 #### Properties
 
@@ -47,9 +47,9 @@ There are no endpoints affecting single card directly, it is always changed toge
 
 ### Session
 
-Represents a learning session belonging to particular user. It can hold multiple sets. During Session creation SessionItem is created for each card in sets selected in the session. 
+Represents a learning session belonging to a particular user. It can hold multiple sets. During Session creation, SessionItem is created for each card in sets selected in the session. 
 
-The most important property of the session is state, since it holds all information needed to progress learning session. State is changed by simple endpoint, which takes a single argument - whether or not flashcard has been answered correctly. 
+The most important property of the session is its state since it holds all information needed for the progress learning session. The state is changed by a simple endpoint, which takes a single argument - whether or not the flashcard has been answered correctly. 
 
 #### Properties
 
@@ -72,9 +72,9 @@ The most important property of the session is state, since it holds all informat
 
 ### SessionItem
 
-Represent a signle card in particular learning session. 
+Represent a single card in the particular learning session. 
 
-Simmilar to card SessionItem has no endpoints affecting it directly. It gets changed alongside its Session.
+Similar to card SessionItem has no endpoints affecting it directly. It gets changed alongside its Session.
 
 #### Properties
 
@@ -96,11 +96,11 @@ Simmilar to card SessionItem has no endpoints affecting it directly. It gets cha
 
 1. POST /users: 
 
-Creates a new user. In addition it generates and return a token used for authorization. 
+Creates a new user. In addition, it generates and returns a token used for authorization. 
 
 2. POST /users/login: 
 
-Logs in user based on given credintials and return authorization token.
+User logs based on given credentials and return authorization token.
 
 3. GET  /users/me:
 
@@ -108,11 +108,11 @@ Returns information about the current user.
 
 4. POST /users/logout:
 
-Deletes the authorization token used by the request, effectively logging user out from current device.
+Deletes the authorization token used by the request, effectively logging the user out from the current device.
 
 5. POST /users/logoutAll:
 
-Deletes all authorization tokens, logging user out from all devices.
+Deletes all authorization tokens, logging the user out from all devices.
 
 6. PATCH /users/me:
 
@@ -120,7 +120,7 @@ Modifies current user profile.
 
 7. DELETE /users/me:
 
-Deletes current user from database.
+Deletes current users from the database.
 
 ### Set
 1. POST /sets
@@ -141,17 +141,17 @@ Returns single set alongside all of the cards belonging to the given set.
 
 5. PATCH /sets/:id
 
-Modifies a set and all of the cards within the set. It matches cards based on their ID and modifies/deletes/creates cards accordingly.
+Modifies a set and all of the cards within the set. It matches cards based on their ID and modifies/deletes/create cards accordingly.
 
 6. DELETE /sets/:id
 
-Deletes a set and all of the card belonging to the given set.
+Deletes a set and all of the cards belonging to the given set.
 
 
 ### Session
 1. POST /session
 
-Creates a new session, taking a list of sets as argument. It also creates all SessionItems corresponding to the cards in selected sets.
+Creates a new session, taking a list of sets as an argument. It also creates all SessionItems corresponding to the cards in selected sets.
 
 2. POST /session/evolve/:id
 
@@ -159,7 +159,7 @@ Changes state of the session, based on correct/incorrect response to the flashca
 
 3. GET /session
 
-Retruns all of the sessions owned by a given user.
+Returns all of the sessions owned by a given user.
 
 4. GET /session/state/:id
 
@@ -176,13 +176,13 @@ Returns SessionItems and their corresponding card information for a given sessio
 
 ### Middleware
 
-The middleware used for most endpoints is an auth middleware. It validates that the token, passed in header is a valid one, and finds a user corresponding to the given token. It later passes this user to the actual endpoint.
+The middleware used for most endpoints is an auth middleware. It validates that the token, passed in the header is a valid one, and finds a user corresponding to the given token. It later passes this user to the actual endpoint.
 
 
 ## Flashcard selection algorithm
 
-Algorithm used for selection of the next flashcard works in the following way:
+The algorithm used for the selection of the next flashcard works in the following way:
 1. When a bucket is decided, flashcards will be drawn from the bucket until either 20 flashcards are drawn, or the bucket is empty.
 2. Next bucket selected is the rightmost bucket, which has at least 10 cards.
 3. If there is no such bucket, the rightmost non-empty bucket is selected instead.
-4. Algorithm works best on session with a size of 100+.
+4. Algorithm works best on a session with a size of 100+.
