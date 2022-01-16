@@ -151,32 +151,38 @@ Deletes a set and all of the card belonging to the given set.
 ### Session
 1. POST /session
 
-
+Creates a new session, taking a list of sets as argument. It also creates all SessionItems corresponding to the cards in selected sets.
 
 2. POST /session/evolve/:id
 
-
+Changes state of the session, based on correct/incorrect response to the flashcard.
 
 3. GET /session
 
-
+Retruns all of the sessions owned by a given user.
 
 4. GET /session/state/:id
 
-
+Returns a state of a given session. 
 
 5. DELETE /session/:id
 
-
+Deletes a session alongside all of the SessionItems connected to the session.
 
 6. GET /session/cards/:id
 
-
+Returns SessionItems and their corresponding card information for a given session.
 
 
 ### Middleware
 
-The middleware used for most endpoints is an auth middleware. 
+The middleware used for most endpoints is an auth middleware. It validates that the token, passed in header is a valid one, and finds a user corresponding to the given token. It later passes this user to the actual endpoint.
 
 
 ## Flashcard selection algorithm
+
+Algorithm used for selection of the next flashcard works in the following way:
+1. When a bucket is decided, flashcards will be drawn from the bucket until either 20 flashcards are drawn, or the bucket is empty.
+2. Next bucket selected is the rightmost bucket, which has at least 10 cards.
+3. If there is no such bucket, the rightmost non-empty bucket is selected instead.
+4. Algorithm works best on session with a size of 100+.
