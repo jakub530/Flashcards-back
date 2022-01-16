@@ -94,12 +94,89 @@ Simmilar to card SessionItem has no endpoints affecting it directly. It gets cha
 
 ### User
 
+1. POST /users: 
+
+Creates a new user. In addition it generates and return a token used for authorization. 
+
+2. POST /users/login: 
+
+Logs in user based on given credintials and return authorization token.
+
+3. GET  /users/me:
+
+Returns information about the current user.
+
+4. POST /users/logout:
+
+Deletes the authorization token used by the request, effectively logging user out from current device.
+
+5. POST /users/logoutAll:
+
+Deletes all authorization tokens, logging user out from all devices.
+
+6. PATCH /users/me:
+
+Modifies current user profile. 
+
+7. DELETE /users/me:
+
+Deletes current user from database.
+
 ### Set
+1. POST /sets
+
+Creates a set and flashcards for the set. 
+
+2. POST /sets/copy/:id
+
+Takes public set and creates a copy of the set assigned to currently logged in user.
+
+3. GET /sets
+
+Returns list of all sets belonging to currently logged in user.
+
+4. GET /sets/:id
+
+Returns single set alongside all of the cards belonging to the given set.
+
+5. PATCH /sets/:id
+
+Modifies a set and all of the cards within the set. It matches cards based on their ID and modifies/deletes/creates cards accordingly.
+
+6. DELETE /sets/:id
+
+Deletes a set and all of the card belonging to the given set.
+
 
 ### Session
+1. POST /session
+
+
+
+2. POST /session/evolve/:id
+
+
+
+3. GET /session
+
+
+
+4. GET /session/state/:id
+
+
+
+5. DELETE /session/:id
+
+
+
+6. GET /session/cards/:id
+
+
+
 
 ### Middleware
 
+The middleware used for most endpoints is an auth middleware. 
 
 
-## Flashcard seletiona algorithm
+## Flashcard selection algorithm
