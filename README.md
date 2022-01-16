@@ -94,82 +94,82 @@ Similar to card SessionItem has no endpoints affecting it directly. It gets chan
 
 ### User
 
-1. POST /users: 
+1. `POST /users`
 
 Creates a new user. In addition, it generates and returns a token used for authorization. 
 
-2. POST /users/login: 
+2. `POST /users/login` 
 
 User logs based on given credentials and return authorization token.
 
-3. GET  /users/me:
+3. `GET  /users/me`
 
 Returns information about the current user.
 
-4. POST /users/logout:
+4. `POST /users/logout`
 
 Deletes the authorization token used by the request, effectively logging the user out from the current device.
 
-5. POST /users/logoutAll:
+5. `POST /users/logoutAll`
 
 Deletes all authorization tokens, logging the user out from all devices.
 
-6. PATCH /users/me:
+6. `PATCH /users/me`
 
 Modifies current user profile. 
 
-7. DELETE /users/me:
+7. `DELETE /users/me`
 
 Deletes current users from the database.
 
 ### Set
-1. POST /sets
+1. `POST /sets`
 
 Creates a set and flashcards for the set. 
 
-2. POST /sets/copy/:id
+2. `POST /sets/copy/:id`
 
 Takes public set and creates a copy of the set assigned to currently logged in user.
 
-3. GET /sets
+3. `GET /sets`
 
 Returns list of all sets belonging to currently logged in user.
 
-4. GET /sets/:id
+4. `GET /sets/:id`
 
 Returns single set alongside all of the cards belonging to the given set.
 
-5. PATCH /sets/:id
+5. `PATCH /sets/:id`
 
 Modifies a set and all of the cards within the set. It matches cards based on their ID and modifies/deletes/create cards accordingly.
 
-6. DELETE /sets/:id
+6. `DELETE /sets/:id`
 
 Deletes a set and all of the cards belonging to the given set.
 
 
 ### Session
-1. POST /session
+1. `POST /session`
 
 Creates a new session, taking a list of sets as an argument. It also creates all SessionItems corresponding to the cards in selected sets.
 
-2. POST /session/evolve/:id
+2. `POST /session/evolve/:id`
 
 Changes state of the session, based on correct/incorrect response to the flashcard.
 
-3. GET /session
+3. `GET /session`
 
 Returns all of the sessions owned by a given user.
 
-4. GET /session/state/:id
+4. `GET /session/state/:id`
 
 Returns a state of a given session. 
 
-5. DELETE /session/:id
+5. `DELETE /session/:id`
 
 Deletes a session alongside all of the SessionItems connected to the session.
 
-6. GET /session/cards/:id
+6. `GET /session/cards/:id`
 
 Returns SessionItems and their corresponding card information for a given session.
 
